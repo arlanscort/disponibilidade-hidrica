@@ -28,15 +28,20 @@ def hidro_inventario(nmEstado=''):
     response = requests.get(url, params=params)
     xml_data = response.content
     root = ET.fromstring(xml_data)
-    estacoes = []
-    for estacao in root.findall('.//Table'):
-        estacao_info = {elem.tag: elem.text for elem in estacao.iter()}
-        estacoes.append(estacao_info)
-    json_data = json.dumps(estacoes)
-    df = pd.read_json(json_data)
+    df = []
+    for dados_estacao in root.findall('.//Table'):
+        tags = []
+        vals = []  
+        for i in dados_estacao:
+            tags.append(i.tag)
+            vals.append(i.text)
+        df_temp = pd.DataFrame(index=tags, data=vals).T
+        df.append(df_temp)
+    df = pd.concat(df)
+    df = df.drop_duplicates()
     return df
 
-def hidro_serie_historica(codEstacao, tipoDados):
+def hidro_serie_historica(codEstacao, tipoDados=3):
     url = 'https://telemetriaws1.ana.gov.br/ServiceANA.asmx/HidroSerieHistorica'
     params = {
         'codEstacao': codEstacao,
@@ -48,6 +53,8 @@ def hidro_serie_historica(codEstacao, tipoDados):
     response = requests.get(url, params=params)
     root = ET.fromstring(response.content)
     dados = []
+    if len(root.findall('.//SerieHistorica')) == 0:
+        return None
     for dados_mes in root.iter('SerieHistorica'):
         serie_mes = {'vazao':{}, 'status':{}}
         for elemento in dados_mes.iter():
@@ -71,14 +78,14 @@ def hidro_serie_historica(codEstacao, tipoDados):
         df_ideal = df_ideal.merge(df_temp, left_on='index', right_on='index')
         dados.append(df_ideal[['data', 'vazao', 'status', 'nivel_consistencia']])
     df = pd.concat(dados).set_index('data').sort_index()
+    
+    return df
+    
     df['vazao'] = df['vazao'].astype(float)
     df['nivel_consistencia'] = df['nivel_consistencia'].astype(int)
     df['status'] = df['status'].astype(int)
     return df
 
 if __name__ == '__main__':
-    
-    t = time.time()
-    df = hidro_inventario('Santa Catarina')
-    df.to_csv(f'inventario{time.strftime("%Y_%m_%d")}.csv')
-    dt = time.time() - t
+
+    df = hidro_inventario()
