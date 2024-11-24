@@ -48,4 +48,6 @@ OutputsModel <- RunModel_GR4J(
   Param = Param
   )
 
-write.csv(OutputsModel[1:19], "OutputsModel.csv", row.names=FALSE, quote=FALSE)
+results_df <- as.data.frame(OutputsModel[1:19])
+# write.csv(OutputsModel[1:19], "OutputsModel.csv", row.names=FALSE, quote=FALSE)
+write.table(results_df, row.names = FALSE, col.names = TRUE, sep = ",")

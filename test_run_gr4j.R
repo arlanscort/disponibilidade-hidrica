@@ -8,7 +8,7 @@ Period_Run_Ini <- "1990-01-01"
 Period_Run_End <- "1999-12-31"
 Param = c(257.24, 1.01, 88.23, 2.21)
 
-BasinObs <- read_csv(FileName)
+BasinObs <- read_csv(FileName, show_col_types = FALSE)
 BasinObs$DatesR <- as.POSIXlt(BasinObs$DatesR, format = "%Y-%m-%d")
 
 InputsModel <- CreateInputsModel(
@@ -42,4 +42,5 @@ OutputsModel <- RunModel_GR4J(
   RunOptions = RunOptions,
   Param = Param)
 
-write.csv(OutputsModel[1:19], "OutputsModel.csv", row.names=FALSE, quote=FALSE)
+# write.csv(OutputsModel[1:19], "OutputsModel.csv", row.names=FALSE, quote=FALSE)
+results_df <- as.data.frame(OutputsModel[1:19])
